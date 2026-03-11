@@ -94,10 +94,11 @@ if failed_files:
         print(f"- {f}")
 
 # ===== Запись CSV =====
-with open(report_file, "w", newline="", encoding="utf-8") as f:
+with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f, delimiter=";")
     writer.writerow(["file", "expected", "actual_status", "result"])
     for r in rows:
         writer.writerow(r)
 
 messagebox.showinfo("Отчет готов", f"CSV отчет сохранен:\n{report_file}")
+
