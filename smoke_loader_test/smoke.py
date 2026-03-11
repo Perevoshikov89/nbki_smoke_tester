@@ -125,17 +125,10 @@ percent = (pass_count / total) * 100 if total else 0
 
 # ===== запись отчета =====
 
+# ===== Запись CSV =====
 with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
-
-    writer = csv.writer(f, delimiter="\t")
-
-    writer.writerow([
-        "file",
-        "expected",
-        "actual_status",
-        "result"
-    ])
-
+    writer = csv.writer(f, delimiter=";")
+    writer.writerow(["file", "expected", "actual_status", "result"])
     for r in rows:
         writer.writerow(r)
 
