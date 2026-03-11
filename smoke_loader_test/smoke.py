@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import re
 import csv
+import os
 from datetime import datetime
 
 
@@ -155,3 +156,8 @@ if failed_files:
 summary += f"\n\nОтчет сохранен:\n{report_file}"
 
 messagebox.showinfo("Smoke тест завершен", summary)
+
+# ===== автоматически открыть папку с отчетом =====
+
+report_folder = os.path.dirname(report_file)
+os.startfile(report_folder)
