@@ -4,12 +4,29 @@ import re
 import csv
 from datetime import datetime
 
+
+# ===== функция чтения файла с автоопределением кодировки =====
+
+def read_log_file(path):
+    encodings = ["utf-8", "cp1251", "windows-1251"]
+
+    for enc in encodings:
+        try:
+            with open(path, encoding=enc) as f:
+                return f.readlines()
+        except UnicodeDecodeError:
+            continue
+
+    raise Exception("Не удалось определить кодировку лог файла")
+
+
 # ===== GUI =====
 
 root = tk.Tk()
 root.withdraw()
 
-# ===== Выбор лог файла =====
+
+# ===== выбор лог файла =====
 
 log_file = filedialog.askopenfilename(
     title="Выберите лог файл loader",
@@ -20,12 +37,14 @@ if not log_file:
     messagebox.showerror("Ошибка", "Лог файл не выбран")
     exit()
 
-# ===== Имя отчета по умолчанию =====
+
+# ===== имя отчета по умолчанию =====
 
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 default_name = f"smoke_report_{now}.csv"
 
-# ===== Выбор места сохранения =====
+
+# ===== выбор места сохранения отчета =====
 
 report_file = filedialog.asksaveasfilename(
     title="Куда сохранить отчет",
@@ -38,33 +57,38 @@ if not report_file:
     messagebox.showerror("Ошибка", "Не выбрано место сохранения отчета")
     exit()
 
-# ===== Парсинг лога =====
+
+# ===== читаем лог =====
+
+lines = read_log_file(log_file)
+
+
+# ===== парсинг лога =====
 
 tests = []
 current_file = None
 expected = None
 
-with open(log_file, encoding="cp1251", errors="replace") as f:
+for line in lines:
 
-    for line in f:
+    m = re.search(r'Processing file (\S+)', line)
+    if m:
+        current_file = m.group(1)
+        expected = None
 
-        m = re.search(r'Processing file (\S+)', line)
-        if m:
-            current_file = m.group(1)
-            expected = None
+    m = re.search(r'comment:\s*(.+)', line)
+    if m:
+        expected = m.group(1).strip()
 
-        m = re.search(r'comment:\s*(.+)', line)
-        if m:
-            expected = m.group(1).strip()
+    m = re.search(r'Finished file (\S+); status:\s*(\w+)', line)
+    if m:
+        file_name = m.group(1)
+        status = m.group(2)
 
-        m = re.search(r'Finished file (\S+); status:\s*(\w+)', line)
-        if m:
-            file_name = m.group(1)
-            status = m.group(2)
+        tests.append((file_name, expected, status))
 
-            tests.append((file_name, expected, status))
 
-# ===== Анализ =====
+# ===== анализ результатов =====
 
 rows = []
 failed_files = []
@@ -92,12 +116,14 @@ for file_name, expected, status in tests:
 
     rows.append([file_name, expected, status, result])
 
-# ===== Итоги =====
+
+# ===== итог =====
 
 total = pass_count + fail_count
 percent = (pass_count / total) * 100 if total else 0
 
-# ===== Запись отчета =====
+
+# ===== запись отчета =====
 
 with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
 
@@ -113,7 +139,8 @@ with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
     for r in rows:
         writer.writerow(r)
 
-# ===== Результат =====
+
+# ===== вывод результата =====
 
 summary = f"""
 SMOKE TEST RESULT
