@@ -1,6 +1,9 @@
 import re
+import csv
+from datetime import datetime
 
 log_file = "logs/loader.log"
+report_file = "reports/smoke_report.csv"
 
 tests = []
 
@@ -30,6 +33,8 @@ with open(log_file, encoding="utf-8") as f:
 pass_count = 0
 fail_count = 0
 
+rows = []
+
 print("\nSMOKE RESULTS\n")
 
 for file_name, expected, status in tests:
@@ -51,8 +56,30 @@ for file_name, expected, status in tests:
 
     print(f"{result:5} | {file_name:40} | expected: {expected} | got: {status}")
 
+    rows.append([file_name, expected, status, result])
+
 
 print("\nSUMMARY")
 print("PASS:", pass_count)
 print("FAIL:", fail_count)
 print("TOTAL:", pass_count + fail_count)
+
+
+# ===== запись отчета =====
+
+with open(report_file, "w", newline="", encoding="utf-8") as f:
+
+    writer = csv.writer(f, delimiter=";")
+
+    writer.writerow([
+        "file",
+        "expected",
+        "actual_status",
+        "result"
+    ])
+
+    for r in rows:
+        writer.writerow(r)
+
+print("\nОтчет сохранен:")
+print(report_file)
