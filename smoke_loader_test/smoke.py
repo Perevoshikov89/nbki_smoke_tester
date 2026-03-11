@@ -1,19 +1,40 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
 import re
 import csv
+import os
 from datetime import datetime
 from colorama import init, Fore, Style
 
-init(autoreset=True)  # автоматический сброс цвета после строки
+# Инициализация цвета
+init(autoreset=True)
 
-log_file = "logs/loader.log"
+# ===== GUI для выбора лог-файла =====
+root = tk.Tk()
+root.withdraw()  # скрываем главное окно
+
+log_file = filedialog.askopenfilename(
+    title="Выберите лог-файл",
+    filetypes=[("Log files", "*.log"), ("All files", "*.*")]
+)
+
+if not log_file:
+    messagebox.showerror("Ошибка", "Файл не выбран!")
+    exit()
+
+# ===== Настройка папки для отчетов =====
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+reports_dir = os.path.join(BASE_DIR, "reports")
+os.makedirs(reports_dir, exist_ok=True)
+
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-report_file = f"reports/smoke_report_{now}.csv"
+report_file = os.path.join(reports_dir, f"smoke_report_{now}.csv")
 
+# ===== Чтение лог-файла и анализ =====
 tests = []
 current_file = None
 expected = None
 
-# читаем лог
 with open(log_file, encoding="utf-8") as f:
     for line in f:
         m = re.search(r'Processing file (\S+)', line)
@@ -31,12 +52,11 @@ with open(log_file, encoding="utf-8") as f:
             status = m.group(2)
             tests.append((file_name, expected, status))
 
-pass_count = 0
-fail_count = 0
+# ===== Анализ и вывод в консоль =====
 rows = []
 failed_files = []
-
-print("\nSMOKE RESULTS\n")
+pass_count = 0
+fail_count = 0
 
 for file_name, expected, status in tests:
     if expected is None:
@@ -44,16 +64,16 @@ for file_name, expected, status in tests:
 
     if "OK" in expected and status == "done":
         result = "PASS"
-        pass_count += 1
         color = Fore.GREEN
+        pass_count += 1
     elif "ERROR" in expected and status == "rejected":
         result = "PASS"
-        pass_count += 1
         color = Fore.GREEN
+        pass_count += 1
     else:
         result = "FAIL"
-        fail_count += 1
         color = Fore.RED
+        fail_count += 1
         failed_files.append(file_name)
 
     print(f"{color}{result:5} | {file_name:40} | expected: {expected} | got: {status}{Style.RESET_ALL}")
@@ -73,12 +93,11 @@ if failed_files:
     for f in failed_files:
         print(f"- {f}")
 
-# запись отчета CSV
+# ===== Запись CSV =====
 with open(report_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f, delimiter=";")
     writer.writerow(["file", "expected", "actual_status", "result"])
     for r in rows:
         writer.writerow(r)
 
-print("\nОтчет сохранен:")
-print(report_file)
+messagebox.showinfo("Отчет готов", f"CSV отчет сохранен:\n{report_file}")
