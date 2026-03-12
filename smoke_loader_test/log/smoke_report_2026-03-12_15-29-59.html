@@ -1,0 +1,25 @@
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Smoke Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .PASS { background-color: #c6efce; }
+        .FAIL { background-color: #ffc7ce; }
+    </style>
+</head>
+<body>
+    <h2>SMOKE TEST REPORT</h2>
+    <p><b>Total:</b> 17 &nbsp;&nbsp; <b>PASS:</b> 14 &nbsp;&nbsp; <b>FAIL:</b> 3 &nbsp;&nbsp; <b>Success Rate:</b> 82.35%</p>
+    <table>
+        <tr>
+            <th>File</th>
+            <th>Expected</th>
+            <th>Actual Status</th>
+            <th>Result</th>
+        </tr>
+<tr class='PASS'><td>YP01MM000001_20260216_000000.xml.19</td><td>OK</td><td>done</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000000.xml.20</td><td>OK</td><td>done</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000002.xml</td><td>ERROR, НЕВЕРНЫЙ ФОРМАТ ДАТЫ</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000002.xml.1</td><td>ERROR, НЕВЕРНЫЙ ФОРМАТ ДАТЫ</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000004.xml.28</td><td>OK НЕТ ЗАДОЛЖЕННОСТИ</td><td>done</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000004.xml.29</td><td>OK НЕТ ЗАДОЛЖЕННОСТИ</td><td>done</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000004.xml.30</td><td>OK НЕТ ЗАДОЛЖЕННОСТИ</td><td>done</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000005.xml</td><td>ERROR ПРОСРОЧКА БЕЗ ТЕКУЩЕГО ДОЛГА</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000006.xml.3</td><td>ERROR ОТРИЦАТЕЛЬНАЯ ЗАДОЛЖЕННОСТЬ 25.4 МЕНЬШЕ 0</td><td>rejected</td><td>PASS</td></tr><tr class='FAIL'><td>YP01MM000001_20260216_000007.xml.9</td><td>ERROR ДУБЛИРОВАНИЕ ORDERNUM, 256 СТРОКА</td><td>done</td><td>FAIL</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000008.xml.4</td><td>ERROR ДАТА ВТОРОГО СОБЫТИЯ МЕНЬШЕ ДАТЫ ПЕРВОГО</td><td>rejected</td><td>PASS</td></tr><tr class='FAIL'><td>YP01MM000001_20260216_000008.xml.5</td><td>ERROR ДАТА ВТОРОГО СОБЫТИЯ МЕНЬШЕ ДАТЫ ПЕРВОГО</td><td>done</td><td>FAIL</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000009.xml.2</td><td>ERROR ПУСТОЙ БЛОК 9 ПРИ 9.1=1</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000010.xml.1</td><td>ERROR НЕВЕРНЫЙ 8.3</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000010.xml.2</td><td>ERROR НЕВЕРНЫЙ 8.3</td><td>rejected</td><td>PASS</td></tr><tr class='PASS'><td>YP01MM000001_20260216_000010.xml.3</td><td>ERROR НЕВЕРНЫЙ 8.3 СТРОКА 215</td><td>rejected</td><td>PASS</td></tr><tr class='FAIL'><td>3E01BB000001_20260311_111945.xml</td><td>ID:291</td><td>done</td><td>FAIL</td></tr></table><h3>Failed Files:</h3><ul><li>YP01MM000001_20260216_000007.xml.9</li><li>YP01MM000001_20260216_000008.xml.5</li><li>3E01BB000001_20260311_111945.xml</li></ul><p>Report saved at: C:/Users/elena/OneDrive/Рабочий стол/nbki_smoke_tester/nbki_smoke_tester/smoke_loader_test/log/smoke_report_2026-03-12_15-29-59.html</p></body></html>

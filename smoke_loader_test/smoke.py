@@ -1,10 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import re
-import csv
 import os
 from datetime import datetime
-from openpyxl import Workbook
+import webbrowser
 
 # ===== функция чтения файла с автоопределением кодировки =====
 def read_log_file(path):
@@ -30,16 +29,16 @@ if not log_file:
     messagebox.showerror("Ошибка", "Лог файл не выбран")
     exit()
 
-# ===== имя CSV отчета =====
+# ===== имя HTML отчета =====
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-default_name = f"smoke_report_{now}.csv"
+default_name = f"smoke_report_{now}.html"
 
 # ===== выбор места сохранения =====
 report_file = filedialog.asksaveasfilename(
-    title="Куда сохранить CSV отчет",
-    defaultextension=".csv",
+    title="Куда сохранить HTML отчет",
+    defaultextension=".html",
     initialfile=default_name,
-    filetypes=[("CSV files", "*.csv")]
+    filetypes=[("HTML files", "*.html")]
 )
 if not report_file:
     messagebox.showerror("Ошибка", "Не выбрано место сохранения отчета")
@@ -86,60 +85,57 @@ for file_name, expected, status in tests:
         result = "FAIL"
         fail_count += 1
         failed_files.append(file_name)
-    rows.append([file_name, expected, status, result])
+    rows.append((file_name, expected, status, result))
 
-# ===== запись CSV =====
-with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
-    writer = csv.writer(f, delimiter=";")
-    writer.writerow(["file", "expected", "actual_status", "result"])
-    for r in rows:
-        writer.writerow(r)
-
-# ===== конвертация CSV в Excel с автоподбором колонок =====
-wb = Workbook()
-ws = wb.active
-ws.title = "Smoke Report"
-
-# читаем CSV и переносим в Excel
-with open(report_file, newline='', encoding='utf-8-sig') as f:
-    reader = csv.reader(f, delimiter=';')
-    for row in reader:
-        ws.append(row)
-
-# автоподбор ширины колонок
-for col in ws.columns:
-    max_length = 0
-    column = col[0].column_letter
-    for cell in col:
-        if cell.value:
-            max_length = max(max_length, len(str(cell.value)))
-    ws.column_dimensions[column].width = max_length + 3
-
-# сохраняем Excel рядом с CSV
-xlsx_file = report_file.rsplit('.', 1)[0] + ".xlsx"
-wb.save(xlsx_file)
-
-# ===== итог =====
 total = pass_count + fail_count
 percent = (pass_count / total) * 100 if total else 0
 
-summary = f"""
-SMOKE TEST RESULT
-
-PASS: {pass_count}
-FAIL: {fail_count}
-TOTAL: {total}
-
-SUCCESS RATE: {percent:.2f} %
+# ===== генерация HTML =====
+html = f"""
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Smoke Test Report</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; }}
+        table {{ border-collapse: collapse; width: 100%; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+        th {{ background-color: #f2f2f2; }}
+        .PASS {{ background-color: #c6efce; }}
+        .FAIL {{ background-color: #ffc7ce; }}
+    </style>
+</head>
+<body>
+    <h2>SMOKE TEST REPORT</h2>
+    <p><b>Total:</b> {total} &nbsp;&nbsp; <b>PASS:</b> {pass_count} &nbsp;&nbsp; <b>FAIL:</b> {fail_count} &nbsp;&nbsp; <b>Success Rate:</b> {percent:.2f}%</p>
+    <table>
+        <tr>
+            <th>File</th>
+            <th>Expected</th>
+            <th>Actual Status</th>
+            <th>Result</th>
+        </tr>
 """
+
+for r in rows:
+    status_class = r[3]
+    html += f"<tr class='{status_class}'>"
+    html += f"<td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td>"
+    html += "</tr>"
+
+html += "</table>"
+
 if failed_files:
-    summary += "\nFAILED FILES:\n"
+    html += "<h3>Failed Files:</h3><ul>"
     for f in failed_files:
-        summary += f"{f}\n"
+        html += f"<li>{f}</li>"
+    html += "</ul>"
 
-summary += f"\n\nОтчеты сохранены:\nCSV: {report_file}\nExcel: {xlsx_file}"
-messagebox.showinfo("Smoke тест завершен", summary)
+html += f"<p>Report saved at: {report_file}</p></body></html>"
 
-# ===== открыть папку с отчетами =====
-report_folder = os.path.dirname(report_file)
-os.startfile(report_folder)
+# ===== запись в файл =====
+with open(report_file, "w", encoding="utf-8") as f:
+    f.write(html)
+
+# ===== открыть отчет в браузере =====
+webbrowser.open(f"file://{report_file}")
