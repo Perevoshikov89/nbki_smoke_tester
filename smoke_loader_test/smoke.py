@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import re
-import csv
 import os
 from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
 
 
 # ===== функция чтения файла с автоопределением кодировки =====
@@ -39,19 +40,19 @@ if not log_file:
     exit()
 
 
-# ===== имя отчета по умолчанию =====
+# ===== имя отчета =====
 
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-default_name = f"smoke_report_{now}.csv"
+default_name = f"smoke_report_{now}.xlsx"
 
 
-# ===== выбор места сохранения отчета =====
+# ===== выбор места сохранения =====
 
 report_file = filedialog.asksaveasfilename(
     title="Куда сохранить отчет",
-    defaultextension=".csv",
+    defaultextension=".xlsx",
     initialfile=default_name,
-    filetypes=[("CSV files", "*.csv")]
+    filetypes=[("Excel files", "*.xlsx")]
 )
 
 if not report_file:
@@ -64,7 +65,7 @@ if not report_file:
 lines = read_log_file(log_file)
 
 
-# ===== парсинг лога =====
+# ===== парсинг =====
 
 tests = []
 current_file = None
@@ -89,7 +90,7 @@ for line in lines:
         tests.append((file_name, expected, status))
 
 
-# ===== анализ результатов =====
+# ===== анализ =====
 
 rows = []
 failed_files = []
@@ -124,14 +125,49 @@ total = pass_count + fail_count
 percent = (pass_count / total) * 100 if total else 0
 
 
-# ===== запись отчета =====
+# ===== Excel отчет =====
 
-# ===== Запись CSV =====
-with open(report_file, "w", newline="", encoding="utf-8-sig") as f:
-    writer = csv.writer(f, delimiter=";")
-    writer.writerow(["file", "expected", "actual_status", "result"])
-    for r in rows:
-        writer.writerow(r)
+wb = Workbook()
+ws = wb.active
+ws.title = "Smoke Report"
+
+
+# цвета
+green = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+red = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+
+# заголовок
+ws.append(["file", "expected", "actual_status", "result"])
+
+
+# строки
+for r in rows:
+
+    ws.append(r)
+
+    if r[3] == "PASS":
+        for cell in ws[ws.max_row]:
+            cell.fill = green
+    else:
+        for cell in ws[ws.max_row]:
+            cell.fill = red
+
+
+# автоподбор ширины колонок
+for col in ws.columns:
+    max_length = 0
+    column = col[0].column_letter
+
+    for cell in col:
+        if cell.value:
+            max_length = max(max_length, len(str(cell.value)))
+
+    ws.column_dimensions[column].width = max_length + 3
+
+
+# сохраняем
+wb.save(report_file)
 
 
 # ===== вывод результата =====
@@ -157,7 +193,8 @@ summary += f"\n\nОтчет сохранен:\n{report_file}"
 
 messagebox.showinfo("Smoke тест завершен", summary)
 
-# ===== автоматически открыть папку с отчетом =====
+
+# ===== открыть папку =====
 
 report_folder = os.path.dirname(report_file)
 os.startfile(report_folder)
