@@ -131,6 +131,7 @@ if failed_files:
         html += f"<li>{f}</li>"
     html += "</ul>"
 
+html += "<p><b>Версия схемы:</b> 5.0</p>"
 html += f"<p>Report saved at: {report_file}</p></body></html>"
 
 # ===== запись в файл =====
