@@ -64,7 +64,10 @@ for line in lines:
     if m:
         file_name = m.group(1)
         status = m.group(2)
-        tests.append((file_name, expected, status))
+
+        # фильтр только для смоук-файлов
+        if file_name.startswith("YP01MM000001"):
+            tests.append((file_name, expected, status))
 
 # ===== анализ =====
 rows = []
