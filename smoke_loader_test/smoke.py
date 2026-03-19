@@ -65,8 +65,10 @@ for line in lines:
         file_name = m.group(1)
         status = m.group(2)
 
-        # фильтр только для смоук-файлов
-        if file_name.startswith("YP01MM000001"):
+# фильтр только для смоук-файлов
+        allowed_prefixes = ("YP01MM000001", "MM01MM000001")
+
+        if file_name.startswith(allowed_prefixes):
             tests.append((file_name, expected, status))
 
 # ===== анализ =====
