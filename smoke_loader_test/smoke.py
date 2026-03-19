@@ -5,6 +5,9 @@ import os
 from datetime import datetime
 import webbrowser
 
+# ===== константы =====
+SMOKE_FILE_PREFIXES = ("YP01MM000001", "MM01MM000001")
+
 # ===== функция чтения файла с автоопределением кодировки =====
 def read_log_file(path):
     encodings = ["utf-8", "cp1251", "windows-1251"]
@@ -25,6 +28,7 @@ log_file = filedialog.askopenfilename(
     title="Выберите лог файл loader",
     filetypes=[("Log files", "*.log"), ("All files", "*.*")]
 )
+
 if not log_file:
     messagebox.showerror("Ошибка", "Лог файл не выбран")
     exit()
@@ -40,6 +44,7 @@ report_file = filedialog.asksaveasfilename(
     initialfile=default_name,
     filetypes=[("HTML files", "*.html")]
 )
+
 if not report_file:
     messagebox.showerror("Ошибка", "Не выбрано место сохранения отчета")
     exit()
@@ -53,22 +58,23 @@ current_file = None
 expected = None
 
 for line in lines:
+
     m = re.search(r'Processing file (\S+)', line)
     if m:
         current_file = m.group(1)
         expected = None
+
     m = re.search(r'comment:\s*(.+)', line)
     if m:
         expected = m.group(1).strip()
+
     m = re.search(r'Finished file (\S+); status:\s*(\w+)', line)
     if m:
         file_name = m.group(1)
         status = m.group(2)
 
-# фильтр только для смоук-файлов
-        allowed_prefixes = ("YP01MM000001", "MM01MM000001")
-
-        if file_name.startswith(allowed_prefixes):
+        # фильтр только для смоук-файлов
+        if file_name.startswith(SMOKE_FILE_PREFIXES):
             tests.append((file_name, expected, status))
 
 # ===== анализ =====
@@ -78,18 +84,23 @@ pass_count = 0
 fail_count = 0
 
 for file_name, expected, status in tests:
+
     if expected is None:
         continue
+
     if "OK" in expected and status == "done":
         result = "PASS"
         pass_count += 1
+
     elif "ERROR" in expected and status == "rejected":
         result = "PASS"
         pass_count += 1
+
     else:
         result = "FAIL"
         fail_count += 1
         failed_files.append(file_name)
+
     rows.append((file_name, expected, status, result))
 
 total = pass_count + fail_count
@@ -99,49 +110,91 @@ percent = (pass_count / total) * 100 if total else 0
 html = f"""
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Smoke Test Report</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; }}
-        table {{ border-collapse: collapse; width: 100%; }}
-        th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-        th {{ background-color: #f2f2f2; }}
-        .PASS {{ background-color: #c6efce; }}
-        .FAIL {{ background-color: #ffc7ce; }}
-    </style>
+<meta charset="UTF-8">
+<title>Smoke Test Report</title>
+
+<style>
+body {{ font-family: Arial, sans-serif; }}
+
+table {{
+border-collapse: collapse;
+width: 100%;
+}}
+
+th, td {{
+border: 1px solid #ddd;
+padding: 8px;
+text-align: left;
+}}
+
+th {{
+background-color: #f2f2f2;
+}}
+
+.PASS {{
+background-color: #c6efce;
+}}
+
+.FAIL {{
+background-color: #ffc7ce;
+}}
+</style>
+
 </head>
+
 <body>
-    <h2>SMOKE TEST REPORT</h2>
-    <p><b>Total:</b> {total} &nbsp;&nbsp; <b>PASS:</b> {pass_count} &nbsp;&nbsp; <b>FAIL:</b> {fail_count} &nbsp;&nbsp; <b>Success Rate:</b> {percent:.2f}%</p>
-    <table>
-        <tr>
-            <th>File</th>
-            <th>Expected</th>
-            <th>Actual Status</th>
-            <th>Result</th>
-        </tr>
+
+<h2>SMOKE TEST REPORT</h2>
+
+<p>
+<b>Total:</b> {total}
+&nbsp;&nbsp;
+<b>PASS:</b> {pass_count}
+&nbsp;&nbsp;
+<b>FAIL:</b> {fail_count}
+&nbsp;&nbsp;
+<b>Success Rate:</b> {percent:.2f}%
+</p>
+
+<table>
+
+<tr>
+<th>File</th>
+<th>Expected</th>
+<th>Actual Status</th>
+<th>Result</th>
+</tr>
 """
 
 for r in rows:
     status_class = r[3]
+
     html += f"<tr class='{status_class}'>"
-    html += f"<td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td>"
+    html += f"<td>{r[0]}</td>"
+    html += f"<td>{r[1]}</td>"
+    html += f"<td>{r[2]}</td>"
+    html += f"<td>{r[3]}</td>"
     html += "</tr>"
 
 html += "</table>"
 
 if failed_files:
+
     html += "<h3>Failed Files:</h3><ul>"
+
     for f in failed_files:
         html += f"<li>{f}</li>"
+
     html += "</ul>"
 
 html += "<p><b>Версия схемы:</b> 5.0</p>"
-html += f"<p>Report saved at: {report_file}</p></body></html>"
+html += f"<p>Report saved at: {report_file}</p>"
+
+html += "</body></html>"
 
 # ===== запись в файл =====
 with open(report_file, "w", encoding="utf-8") as f:
     f.write(html)
 
-# ===== открыть отчет в браузере =====
+# ===== открыть отчет =====
 webbrowser.open(f"file://{report_file}")
