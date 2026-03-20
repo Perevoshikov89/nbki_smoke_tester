@@ -43,12 +43,12 @@ if not log_file:
 # ===== диапазон времени =====
 start_time = simpledialog.askstring(
     "Временной диапазон",
-    "Введите ВРЕМЯ НАЧАЛА анализа (HH:MM)"
+    "Введите ВРЕМЯ НАЧАЛА анализа (HH:MM)\nНапример: 08:30"
 )
 
 end_time = simpledialog.askstring(
     "Временной диапазон",
-    "Введите ВРЕМЯ ОКОНЧАНИЯ анализа (HH:MM)"
+    "Введите ВРЕМЯ НАЧАЛА анализа (HH:MM)\nНапример: 09:10"
 )
 
 if not start_time or not end_time:
