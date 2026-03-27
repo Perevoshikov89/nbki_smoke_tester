@@ -6,7 +6,13 @@ import webbrowser
 import sys
 
 # ===== константы =====
-SMOKE_FILE_PREFIXES = ("YP01MM000001", "MM01MM000001")
+SMOKE_FILE_PREFIXES = ("YP01MM000001", "MM01MM000001") #преффиксы файлов
+
+# ожидаемые ошибки, которые должны закончиться rejected
+EXPECTED_REJECT_PASS = ["ERROR", "WRONGBLOCK", "LASTRECORD"]
+
+# ожидаемые статусы, которые должны закончиться done
+EXPECTED_DONE_PASS = ["NOTFOUND", "NOTUPDATE"]
 
 # ===== чтение лога =====
 def read_log_file(path):
@@ -202,17 +208,14 @@ for file_name, expected, status, reject_message in tests:
         result = "PASS"
         pass_count += 1
 
-    elif "ERROR" in expected and status == "rejected":
+    elif any(x in expected for x in EXPECTED_REJECT_PASS) and status == "rejected":
         result = "PASS"
         pass_count += 1
 
-    elif ("NOTFOUND" in expected or "NOTUPDATE" in expected) and status == "done":
+    elif any(x in expected for x in EXPECTED_DONE_PASS) and status == "done":
         result = "PASS"
         pass_count += 1
-
-    elif "WRONGBLOCK" in expected and status == "rejected":
-        result = "PASS"
-        pass_count += 1    
+   
     else:
         result = "FAIL"
         fail_count += 1
