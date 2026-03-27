@@ -209,6 +209,10 @@ for file_name, expected, status, reject_message in tests:
     elif ("NOTFOUND" in expected or "NOTUPDATE" in expected) and status == "done":
         result = "PASS"
         pass_count += 1
+
+    elif "WRONGBLOCK" in expected and status == "rejected":
+        result = "PASS"
+        pass_count += 1    
     else:
         result = "FAIL"
         fail_count += 1
