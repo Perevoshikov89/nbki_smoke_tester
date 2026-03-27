@@ -48,7 +48,7 @@ start_time = simpledialog.askstring(
 
 end_time = simpledialog.askstring(
     "Временной диапазон",
-    "Введите ВРЕМЯ НАЧАЛА анализа (HH:MM)\nНапример: 09:10"
+    "Введите ВРЕМЯ КОНЦА анализа (HH:MM)\nНапример: 09:10"
 )
 
 if not start_time or not end_time:
@@ -86,6 +86,7 @@ tests = []
 
 current_file = None
 expected = None
+reject_message = ""
 
 runtime_error = None
 runtime_error_time = None
@@ -102,12 +103,18 @@ for line in lines:
         runtime_error_time = log_time
         break
 
+    # ===== сообщение Reject field =====
+    m = re.search(r"(Reject field .+)", line)
+    if m and in_range:
+        reject_message = m.group(1).strip()
+
     # ===== начало обработки файла =====
     m = re.search(r"Processing file (\S+)", line)
 
     if m:
         current_file = m.group(1)
         expected = None
+        reject_message = ""
 
     # ===== ожидаемый результат =====
     m = re.search(r"comment:\s*(.+)", line)
@@ -124,7 +131,7 @@ for line in lines:
         status = m.group(2)
 
         if file_name.startswith(SMOKE_FILE_PREFIXES) and in_range:
-            tests.append((file_name, expected or "", status))
+            tests.append((file_name, expected or "", status, reject_message))
 
 # ===== RuntimeException отчет =====
 if runtime_error:
@@ -184,7 +191,7 @@ pass_count = 0
 fail_count = 0
 skip_count = 0
 
-for file_name, expected, status in tests:
+for file_name, expected, status, reject_message in tests:
 
     if expected == "":
         result = "SKIPPED"
@@ -204,7 +211,7 @@ for file_name, expected, status in tests:
         fail_count += 1
         failed_files.append(file_name)
 
-    rows.append((file_name, expected, status, result))
+    rows.append((file_name, expected, status, result, reject_message))
 
 total = pass_count + fail_count + skip_count
 percent = (pass_count / total) * 100 if total else 0
@@ -262,11 +269,12 @@ background:#f2f2f2;
 <th>Expected</th>
 <th>Actual Status</th>
 <th>Result</th>
+<th>Reject Message</th>
 </tr>
 """
 
 for r in rows:
-    html += f"<tr class='{r[3]}'><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td></tr>"
+    html += f"<tr class='{r[3]}'><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td></tr>"
 
 html += "</table>"
 
