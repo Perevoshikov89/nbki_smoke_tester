@@ -9,7 +9,7 @@ import sys
 SMOKE_FILE_PREFIXES = ("YP01MM000001", "MM01MM000001") #преффиксы файлов
 
 # ожидаемые ошибки, которые должны закончиться rejected
-EXPECTED_REJECT_PASS = ["ERROR", "WRONGBLOCK", "LASTRECORD", "ORG.XML.SAX.SAXPARSEEXCEPTION"]
+EXPECTED_REJECT_PASS = ["ERROR", "WRONGBLOCK", "LASTRECORD", "ORG.XML.SAX.SAXPARSEEXCEPTION", "SUBJECT NOTFOUND"]
 
 # ожидаемые статусы, которые должны закончиться done
 EXPECTED_DONE_PASS = ["NOTFOUND", "NOTUPDATE"]

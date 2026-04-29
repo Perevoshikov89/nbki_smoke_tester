@@ -29,6 +29,8 @@ LASTRECORD - ожидается отказ в корректировке
 
 ORG.XML.SAX.SAXPARSEEXCEPTION - ошибка валидации с XSD-схемой
 
+SUBJECT NOTFOUND - субъект не найден
+
 Файлы загружаются через loader вручную
 
 Loader формирует лог-файл: loader-trace.log, где фиксируются статусы обработки:
