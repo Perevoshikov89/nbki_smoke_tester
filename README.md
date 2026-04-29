@@ -27,6 +27,8 @@ NOTUPDATE или NOTFOUND - ожидается предупреждение
 
 LASTRECORD - ожидается отказ в корректировке
 
+ORG.XML.SAX.SAXPARSEEXCEPTION - ошибка валидации с XSD-схемой
+
 Файлы загружаются через loader вручную
 
 Loader формирует лог-файл: loader-trace.log, где фиксируются статусы обработки:
