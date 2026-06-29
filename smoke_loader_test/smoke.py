@@ -9,6 +9,22 @@ from pathlib import Path
 # ===== константы =====
 SMOKE_FILE_PREFIXES = ("YP01MM000001", "MM01MM000001")
 
+
+
+# ===== соответствие ожидаемого результата и статуса loader =====
+
+EXPECTED_STATUS = {
+    "OK": "done",
+    "ERROR": "rejected",
+    "WRONGBLOCK": "rejected",
+    "LASTRECORD": "rejected",
+    "ORG.XML.SAX.SAXPARSEEXCEPTION": "rejected",
+    "SUBJECT NOTFOUND": "rejected",
+    "NOTFOUND": "done",
+    "NOTUPDATE": "done",
+}
+
+
 # ===== чтение лога =====
 def read_log_file(path):
     encodings = ["utf-8", "cp1251", "windows-1251"]
@@ -43,11 +59,32 @@ if not log_file:
     sys.exit()
 
 # ===== время =====
-start_time = simpledialog.askstring("Укажите время начала обработки", "HH:MM start")
-end_time = simpledialog.askstring("Укажите время конца обработки", "HH:MM end")
+
+start_time = simpledialog.askstring(
+    "Укажите время начала обработки",
+    "HH:MM"
+)
+
+end_time = simpledialog.askstring(
+    "Укажите время конца обработки",
+    "HH:MM"
+)
 
 if not start_time or not end_time:
     sys.exit()
+
+try:
+    datetime.strptime(start_time, "%H:%M")
+    datetime.strptime(end_time, "%H:%M")
+except ValueError:
+    messagebox.showerror(
+        "Ошибка",
+        "Введите время в формате HH:MM"
+    )
+    sys.exit()
+
+
+
 
 # ===== Выбор папки с тестовыми файлами XML =====
 xml_folder = filedialog.askdirectory(title="Выберите папку с тестовыми файлами XML")
@@ -74,18 +111,34 @@ xml_map = {}
 
 for xml_file in Path(xml_folder).glob("*.xml"):
 
+    if not xml_file.name.startswith(SMOKE_FILE_PREFIXES):
+        continue
+
     text = xml_file.read_text(encoding="utf-8", errors="ignore")
 
     m = re.search(r'eventComment="([^"]+)"', text, re.IGNORECASE)
     event_comment = m.group(1) if m else ""
 
-    exp = re.search(r"EXP:\s*(OK|ERROR)", event_comment, re.IGNORECASE)
-    expected = exp.group(1).upper() if exp else ""
+    exp = re.search(
+    r"EXP:\s*(OK|ERROR|WRONGBLOCK|LASTRECORD|ORG\.XML\.SAX\.SAXPARSEEXCEPTION|SUBJECT\s+NOTFOUND|NOTFOUND|NOTUPDATE)",
+    event_comment,
+    re.IGNORECASE
+)
+
+    expected = ""
+
+    if exp:
+        expected = re.sub(
+            r"\s+",
+            " ",
+            exp.group(1).upper()
+        ).strip()
 
     xml_map[xml_file.name] = {
         "event_comment": event_comment,
         "expected": expected
     }
+    
 
 print(f"XML loaded: {len(xml_map)}")
 
@@ -124,6 +177,10 @@ for line in lines:
     if m and in_range:
 
         file_name = re.sub(r"\.\d+$", "", m.group(1))
+
+        if not file_name.startswith(SMOKE_FILE_PREFIXES):
+            continue
+
         status = m.group(2)
 
         results[file_name] = {
@@ -177,15 +234,21 @@ for file_name, xml in xml_map.items():
         status = actual["status"]
         reject = reject_messages.get(file_name, "")
 
-        if expected == "OK" and status == "done":
-            result = "PASS"
-            pass_count += 1
+        expected_status = EXPECTED_STATUS.get(expected)
 
-        elif expected == "ERROR" and status == "rejected":
+        if expected_status is None:
+
+            result = "SKIPPED"
+            skip_count += 1
+            skipped.append(file_name)
+
+        elif status == expected_status:
+
             result = "PASS"
             pass_count += 1
 
         else:
+
             result = "FAIL"
             fail_count += 1
             failed.append(file_name)
